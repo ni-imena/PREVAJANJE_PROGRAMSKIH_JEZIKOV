@@ -11,15 +11,22 @@ const val PLUS_SYMBOL = 4
 const val MINUS_SYMBOL = 5
 const val TIMES_SYMBOL = 6
 const val DIVIDE_SYMBOL = 7
-const val BWAND_SYMBOL = 8
-const val BWOR_SYMBOL = 9
-const val POINT_SYMBOL = 10
-const val ASSIGN_SYMBOL = 11
-const val SEMI_SYMBOL = 12
-const val FOR_SYMBOL = 13
-const val TO_SYMBOL = 14
-const val BEGIN_SYMBOL = 15
-const val END_SYMBOL = 16
+const val COMMA_SYMBOL = 8
+const val ASSIGN_SYMBOL = 9
+const val SEMI_SYMBOL = 10
+const val CURLY_OPEN_SYMBOL = 11
+const val CURLY_CLOSE_SYMBOL = 12
+const val LPAREN_SYMBOL = 13
+const val RPAREN_SYMBOL = 14
+const val RUN_SYMBOL = 15
+const val PATH_SYMBOL = 16
+const val START_SYMBOL = 17
+const val FINISH_SYMBOL = 18
+const val CHECK_POINT_SYMBOL = 19
+const val FOOD_STATION_SYMBOL = 20
+const val WATER_STATION_SYMBOL = 21
+const val CIRC_SYMBOL = 22
+const val BOX_SYMBOL = 23
 
 const val ERROR_STATE = 0
 const val EOF_SYMBOL = -1
@@ -39,7 +46,7 @@ object ForForeachFFFAutomaton: DFA {
     override val states = (1 .. 100).toSet()
     override val alphabet = 0 .. 255
     override val startState = 1
-    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 52, 54, 59, 62)
+    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54)
 
     private val numberOfStates = states.max() + 1 // plus the ERROR_STATE
     private val numberOfCodes = alphabet.max() + 1 // plus the EOF
@@ -57,6 +64,15 @@ object ForForeachFFFAutomaton: DFA {
     private fun setTransition(from: Int, range: CharRange, to: Int) {
         for (c in range) {
             transitions[from][c.code + 1] = to
+        }
+    }
+
+    private fun setNegativeTransition(from: Int, ignore: Char, to: Int) {
+        val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        for (c in allowedChars) {
+            if (c != ignore) {
+                transitions[from][c.code + 1] = to
+            }
         }
     }
 
@@ -90,140 +106,169 @@ object ForForeachFFFAutomaton: DFA {
         setTransition(4, ',', 4)
         setTransition(4, '"', 5)
 
-        setTransition(1, 'a', 6)
-        setTransition(1, 'c'..'d', 6)
-        setTransition(1, 'g'..'s', 6)
-        setTransition(1, 'u'..'z', 6)
-        setTransition(1, 'A'..'B', 6)
-        setTransition(1, 'D'..'Z', 6)
-        setTransition(6, 'a'..'z', 6)
-        setTransition(6, 'a'..'z', 6)
-        setTransition(6, 'A'..'Z', 6)
-        setTransition(6, '0'..'9', 7)
-        setTransition(7, '0'..'9', 7)
+        setTransition(1, '+', 6)
+        setTransition(1, '-', 7)
+        setTransition(1, '*', 8)
+        setTransition(1, '/', 9)
+        setTransition(1, EOF, 10)
+        setTransition(1, ' ', 11)
+        setTransition(1, '\n', 11)
+        setTransition(1, '\r', 11)
+        setTransition(1, '\t', 11)
+        setTransition(1, '=', 12)
+        setTransition(1, ',', 13)
 
-        setTransition(1, '+', 8)
-        setTransition(1, '-', 9)
-        setTransition(1, '*', 10)
-        setTransition(1, '/', 11)
-        setTransition(1, '&', 12)
-        setTransition(1, '|', 13)
-        setTransition(1, EOF, 14)
-        setTransition(1, ' ', 15)
-        setTransition(1, '\n', 15)
-        setTransition(1, '\r', 15)
-        setTransition(1, '\t', 15)
-        setTransition(1, '=', 16)
+        setTransition(1, 'a', 14)
+        setTransition(1, 'a'..'b', 14)
+        setTransition(1, 'd'..'e', 14)
+        setTransition(1, 'g'..'o', 14)
+        setTransition(1, 'q', 14)
+        setTransition(1, 't'..'v', 14)
+        setTransition(1, 'x'..'z', 14)
+        setTransition(1, 'A'..'Z', 14)
+        setTransition(14, 'a'..'z', 14)
+        setTransition(14, 'A'..'Z', 14)
+        setTransition(14, '0'..'9', 15)
+        setTransition(15, '0'..'9', 15)
 
-        setTransition(1, '(', 17)
-        setTransition(17, '0'..'9', 18)
-        setTransition(18, '0'..'9', 18)
-        setTransition(18, ',', 19)
-        setTransition(19, '0'..'9', 20)
-        setTransition(20, '0'..'9', 20)
-        setTransition(20, ')', 21)
+        setTransition(1, '(', 16)
+        setTransition(1, ')', 17)
 
-        // for
-        setTransition(1, 'f', 50)
-        setTransition(50, 'o', 51)
-        setTransition(51, 'r', 52)
+        setTransition(1, '{', 18)
+        setTransition(1, '}', 19)
 
-        setTransition(50, 'a'..'n', 6)
-        setTransition(50, 'p'..'z', 6)
-        setTransition(50, 'A'..'Z', 6)
-        setTransition(50, '0'..'9', 7)
+        setTransition(1, 'r', 20)
+        setTransition(20, 'u', 21)
+        setTransition(21, 'n', 22)
 
-        setTransition(51, 'a'..'q', 6)
-        setTransition(51, 's'..'z', 6)
-        setTransition(51, 'A'..'Z', 6)
-        setTransition(51, '0'..'9', 7)
+        setNegativeTransition(20, 'u', 14)
+        setNegativeTransition(21, 'n', 14)
+        setTransition(20, '0'..'9', 15)
+        setTransition(21, '0'..'9', 15)
 
-        setTransition(52, 'a'..'z', 6)
-        setTransition(52, 'A'..'Z', 6)
-        setTransition(52, '0'..'9', 7)
+        setTransition(1, 'p', 23)
+        setTransition(23, 'a', 24)
+        setTransition(24, 't', 25)
+        setTransition(25, 'h', 26)
 
-        // to
-        setTransition(1, 't', 23)
-        setTransition(53, 'o', 24)
+        setNegativeTransition(23, 'a', 14)
+        setNegativeTransition(24, 't', 14)
+        setNegativeTransition(25, 'h', 14)
+        setTransition(23, '0'..'9', 15)
+        setTransition(24, '0'..'9', 15)
+        setTransition(25, '0'..'9', 15)
 
-        setTransition(53, 'a'..'n', 6)
-        setTransition(53, 'p'..'z', 6)
-        setTransition(53, 'A'..'Z', 6)
-        setTransition(53, '0'..'9', 7)
+        setTransition(1, 's', 27)
+        setTransition(27, 't', 28)
+        setTransition(28, 'a', 29)
+        setTransition(29, 'r', 30)
+        setTransition(30, 't', 31)
 
-        setTransition(52, 'a'..'z', 6)
-        setTransition(52, 'A'..'Z', 6)
-        setTransition(52, '0'..'9', 7)
+        setNegativeTransition(27, 't', 14)
+        setNegativeTransition(28, 'a', 14)
+        setNegativeTransition(29, 'r', 14)
+        setNegativeTransition(30, 't', 14)
+        setTransition(27, '0'..'9', 15)
+        setTransition(28, '0'..'9', 15)
+        setTransition(29, '0'..'9', 15)
+        setTransition(30, '0'..'9', 15)
 
-        // begin
-        setTransition(1, 'b', 25)
-        setTransition(55, 'e', 26)
-        setTransition(56, 'g', 27)
-        setTransition(57, 'i', 28)
-        setTransition(58, 'n', 29)
+        setTransition(1, 'e', 32)
+        setTransition(32, 'n', 33)
+        setTransition(33, 'd', 34)
 
-        setTransition(55, 'a'..'d', 6)
-        setTransition(55, 'f'..'z', 6)
-        setTransition(55, 'A'..'Z', 6)
-        setTransition(55, '0'..'9', 7)
+        setNegativeTransition(32, 'n', 14)
+        setNegativeTransition(33, 'd', 14)
+        setTransition(32, '0'..'9', 15)
+        setTransition(33, '0'..'9', 15)
 
-        setTransition(56, 'a'..'f', 6)
-        setTransition(56, 'h'..'z', 6)
-        setTransition(56, 'A'..'Z', 6)
-        setTransition(56, '0'..'9', 7)
+        setTransition(1, 't', 35)
+        setTransition(35, 'i', 36)
+        setTransition(36, 'm', 37)
+        setTransition(37, 'e', 38)
 
-        setTransition(57, 'a'..'h', 6)
-        setTransition(57, 'j'..'z', 6)
-        setTransition(57, 'A'..'Z', 6)
-        setTransition(57, '0'..'9', 7)
+        setNegativeTransition(35, 'i', 14)
+        setNegativeTransition(36, 'm', 14)
+        setNegativeTransition(37, 'e', 14)
+        setTransition(35, '0'..'9', 15)
+        setTransition(36, '0'..'9', 15)
+        setTransition(37, '0'..'9', 15)
 
-        setTransition(58, 'a'..'m', 6)
-        setTransition(58, 'o'..'z', 6)
-        setTransition(58, 'A'..'Z', 6)
-        setTransition(58, '0'..'9', 7)
+        setTransition(1, 'f', 39)
+        setTransition(39, 'o', 40)
+        setTransition(40, 'o', 41)
+        setTransition(41, 'd', 42)
 
-        setTransition(59, 'a'..'z', 6)
-        setTransition(59, 'A'..'Z', 6)
-        setTransition(59, '0'..'9', 7)
+        setNegativeTransition(39, 'o', 14)
+        setNegativeTransition(40, 'o', 14)
+        setNegativeTransition(41, 'd', 14)
+        setTransition(39, '0'..'9', 15)
+        setTransition(40, '0'..'9', 15)
+        setTransition(41, '0'..'9', 15)
 
-        // end
-        setTransition(1, 'e', 60)
-        setTransition(60, 'n', 61)
-        setTransition(61, 'd', 62)
+        setTransition(1, 'w', 43)
+        setTransition(43, 'a', 44)
+        setTransition(44, 't', 45)
+        setTransition(45, 'e', 46)
+        setTransition(46, 'r', 47)
 
-        setTransition(60, 'a'..'m', 6)
-        setTransition(60, 'o'..'z', 6)
-        setTransition(60, 'A'..'Z', 6)
-        setTransition(60, '0'..'9', 7)
+        setNegativeTransition(43, 'a', 14)
+        setNegativeTransition(44, 't', 14)
+        setNegativeTransition(45, 'e', 14)
+        setNegativeTransition(46, 'r', 14)
+        setTransition(43, '0'..'9', 15)
+        setTransition(44, '0'..'9', 15)
+        setTransition(45, '0'..'9', 15)
+        setTransition(46, '0'..'9', 15)
 
-        setTransition(61, 'a'..'c', 6)
-        setTransition(61, 'e'..'z', 6)
-        setTransition(61, 'A'..'Z', 6)
-        setTransition(61, '0'..'9', 7)
+        setTransition(1, 'c', 48)
+        setTransition(48, 'i', 49)
+        setTransition(49, 'r', 50)
+        setTransition(50, 'c', 51)
 
-        setTransition(62, 'a'..'z', 6)
-        setTransition(62, 'A'..'Z', 6)
-        setTransition(62, '0'..'9', 7)
+        setNegativeTransition(48, 'i', 14)
+        setNegativeTransition(49, 'r', 14)
+        setNegativeTransition(50, 'c', 14)
+        setTransition(48, '0'..'9', 15)
+        setTransition(49, '0'..'9', 15)
+        setTransition(50, '0'..'9', 15)
+
+        setTransition(1, 'b', 52)
+        setTransition(52, 'o', 53)
+        setTransition(53, 'x', 54)
+
+        setNegativeTransition(52, 'o', 14)
+        setNegativeTransition(53, 'x', 14)
+        setTransition(52, '0'..'9', 15)
+        setTransition(53, '0'..'9', 15)
 
 
         setSymbol(2, INT_SYMBOL)
         setSymbol(5, STRING_SYBOL)
-        setSymbol(6, VAR_SYMBOL)
-        setSymbol(7, VAR_SYMBOL)
-        setSymbol(8, PLUS_SYMBOL)
-        setSymbol(9, MINUS_SYMBOL)
-        setSymbol(10, TIMES_SYMBOL)
-        setSymbol(11, DIVIDE_SYMBOL)
-        setSymbol(12, BWAND_SYMBOL)
-        setSymbol(13, BWOR_SYMBOL)
-        setSymbol(14, EOF_SYMBOL)
-        setSymbol(15, SKIP_SYMBOL)
-        setSymbol(16, ASSIGN_SYMBOL)
-        setSymbol(21, POINT_SYMBOL)
-        setSymbol(52, FOR_SYMBOL)
-        setSymbol(54, TO_SYMBOL)
-        setSymbol(59, BEGIN_SYMBOL)
-        setSymbol(62, END_SYMBOL)
+        setSymbol(6, PLUS_SYMBOL)
+        setSymbol(7, MINUS_SYMBOL)
+        setSymbol(8, TIMES_SYMBOL)
+        setSymbol(9, DIVIDE_SYMBOL)
+        setSymbol(10, EOF_SYMBOL)
+        setSymbol(11, SKIP_SYMBOL)
+        setSymbol(12, ASSIGN_SYMBOL)
+        setSymbol(13, COMMA_SYMBOL)
+        setSymbol(14, VAR_SYMBOL)
+        setSymbol(15, VAR_SYMBOL)
+        setSymbol(16, LPAREN_SYMBOL)
+        setSymbol(17, RPAREN_SYMBOL)
+        setSymbol(18, CURLY_OPEN_SYMBOL)
+        setSymbol(19, CURLY_CLOSE_SYMBOL)
+        setSymbol(22, RUN_SYMBOL)
+        setSymbol(26, PATH_SYMBOL)
+        setSymbol(31, START_SYMBOL)
+        setSymbol(34, FINISH_SYMBOL)
+        setSymbol(38, CHECK_POINT_SYMBOL)
+        setSymbol(42, FOOD_STATION_SYMBOL)
+        setSymbol(47, WATER_STATION_SYMBOL)
+        setSymbol(51, CIRC_SYMBOL)
+        setSymbol(54, BOX_SYMBOL)
+
     }
 }
 
@@ -284,16 +329,24 @@ fun name(symbol: Int) =
         MINUS_SYMBOL -> "minus"
         TIMES_SYMBOL -> "times"
         DIVIDE_SYMBOL -> "divide"
-        BWAND_SYMBOL -> "bwand"
-        BWOR_SYMBOL -> "bwor"
+        COMMA_SYMBOL -> "comma"
         EOF_SYMBOL -> "eof"
         ASSIGN_SYMBOL -> "assign"
-        POINT_SYMBOL -> "point"
         SEMI_SYMBOL -> "semi"
-        FOR_SYMBOL -> "for"
-        TO_SYMBOL -> "to"
-        BEGIN_SYMBOL -> "begin"
-        END_SYMBOL -> "end"
+        CURLY_OPEN_SYMBOL -> "lcurly"
+        CURLY_CLOSE_SYMBOL -> "rcurly"
+        LPAREN_SYMBOL -> "lparen"
+        RPAREN_SYMBOL -> "rparen"
+        RUN_SYMBOL -> "run"
+        PATH_SYMBOL -> "path"
+        START_SYMBOL -> "start"
+        FINISH_SYMBOL -> "finish"
+        CHECK_POINT_SYMBOL -> "checkpoint"
+        FOOD_STATION_SYMBOL -> "food station"
+        WATER_STATION_SYMBOL -> "water station"
+        CIRC_SYMBOL -> "circle"
+        BOX_SYMBOL -> "box"
+
         else -> throw Error("Invalid symbol")
     }
 
