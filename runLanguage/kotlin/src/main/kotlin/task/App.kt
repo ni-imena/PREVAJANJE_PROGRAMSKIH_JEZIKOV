@@ -21,12 +21,14 @@ const val RPAREN_SYMBOL = 14
 const val RUN_SYMBOL = 15
 const val PATH_SYMBOL = 16
 const val START_SYMBOL = 17
-const val FINISH_SYMBOL = 18
-const val CHECK_POINT_SYMBOL = 19
+const val END_SYMBOL = 18
+const val TIME_SYMBOL = 19
 const val FOOD_STATION_SYMBOL = 20
 const val WATER_STATION_SYMBOL = 21
 const val CIRC_SYMBOL = 22
 const val BOX_SYMBOL = 23
+const val BWAND_SYMBOL = 24
+const val BWOR_SYMBOL = 25
 
 const val ERROR_STATE = 0
 const val EOF_SYMBOL = -1
@@ -46,7 +48,7 @@ object ForForeachFFFAutomaton: DFA {
     override val states = (1 .. 100).toSet()
     override val alphabet = 0 .. 255
     override val startState = 1
-    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54)
+    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54, 55, 56)
 
     private val numberOfStates = states.max() + 1 // plus the ERROR_STATE
     private val numberOfCodes = alphabet.max() + 1 // plus the EOF
@@ -68,7 +70,7 @@ object ForForeachFFFAutomaton: DFA {
     }
 
     private fun setNegativeTransition(from: Int, ignore: Char, to: Int) {
-        val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz "
         for (c in allowedChars) {
             if (c != ignore) {
                 transitions[from][c.code + 1] = to
@@ -242,6 +244,9 @@ object ForForeachFFFAutomaton: DFA {
         setTransition(52, '0'..'9', 15)
         setTransition(53, '0'..'9', 15)
 
+        setTransition(1, '&', 55)
+        setTransition(1, '|', 56)
+
 
         setSymbol(2, INT_SYMBOL)
         setSymbol(5, STRING_SYBOL)
@@ -262,12 +267,14 @@ object ForForeachFFFAutomaton: DFA {
         setSymbol(22, RUN_SYMBOL)
         setSymbol(26, PATH_SYMBOL)
         setSymbol(31, START_SYMBOL)
-        setSymbol(34, FINISH_SYMBOL)
-        setSymbol(38, CHECK_POINT_SYMBOL)
+        setSymbol(34, END_SYMBOL)
+        setSymbol(38, TIME_SYMBOL)
         setSymbol(42, FOOD_STATION_SYMBOL)
         setSymbol(47, WATER_STATION_SYMBOL)
         setSymbol(51, CIRC_SYMBOL)
         setSymbol(54, BOX_SYMBOL)
+        setSymbol(55, BWAND_SYMBOL)
+        setSymbol(56, BWOR_SYMBOL)
 
     }
 }
@@ -311,7 +318,7 @@ class Scanner(private val automaton: DFA, private val stream: InputStream) {
             return if (symbol == SKIP_SYMBOL) {
                 getToken()
             } else {
-                val lexeme = String(buffer.toCharArray())
+                val lexeme = String(buffer.toCharArray()).trim() // If allowing spaces to determine variables
                 Token(symbol, lexeme, startRow, startColumn)
             }
         } else {
@@ -340,12 +347,14 @@ fun name(symbol: Int) =
         RUN_SYMBOL -> "run"
         PATH_SYMBOL -> "path"
         START_SYMBOL -> "start"
-        FINISH_SYMBOL -> "finish"
-        CHECK_POINT_SYMBOL -> "checkpoint"
-        FOOD_STATION_SYMBOL -> "food station"
-        WATER_STATION_SYMBOL -> "water station"
+        END_SYMBOL -> "end"
+        TIME_SYMBOL -> "time"
+        FOOD_STATION_SYMBOL -> "food"
+        WATER_STATION_SYMBOL -> "water"
         CIRC_SYMBOL -> "circle"
         BOX_SYMBOL -> "box"
+        BWAND_SYMBOL -> "bwand"
+        BWOR_SYMBOL -> "bwor"
 
         else -> throw Error("Invalid symbol")
     }
@@ -370,18 +379,8 @@ class Parser(private val scanner: Scanner) {
 
     private fun Statements(): Boolean {
         while (true) {
-            if(name(token.symbol) == "for") {
-                if (!ForLoop()) {
-                    return false
-                }
-            }
-            else if(name(token.symbol) == "variable") {
+            if(name(token.symbol) == "variable") {
                 if (!Assign()) {
-                    return false
-                }
-            }
-            else if(name(token.symbol) == "console") {
-                if (!Console()) {
                     return false
                 }
             }
@@ -396,66 +395,8 @@ class Parser(private val scanner: Scanner) {
         if (name(token.symbol) == "assign") {
             token = scanner.getToken()
             if (Bitwise()) {
-                if (name(token.symbol) == "semi") {
-                    token = scanner.getToken()
-                }
                 return true
             }
-        }
-        return false
-    }
-    private fun ForLoop(): Boolean {
-        token = scanner.getToken()
-        if (name(token.symbol) == "lparen") {
-            token = scanner.getToken()
-            if (name(token.symbol) == "variable") {
-                token = scanner.getToken()
-                if (name(token.symbol) == "assign") {
-                    token = scanner.getToken()
-                    if (Bitwise() && To()) {
-                        if (name(token.symbol) == "rparen") {
-                            token = scanner.getToken()
-                            if (Begin()) {
-                                return true
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false
-    }
-    private fun To(): Boolean {
-        if (name(token.symbol) == "to") {
-            token = scanner.getToken()
-            if (Bitwise()) {
-                return true
-            }
-        }
-        return false
-    }
-    private fun Begin(): Boolean {
-        if (name(token.symbol) == "begin") {
-            token = scanner.getToken()
-            if (Statements()) {
-                if (name(token.symbol) == "end") {
-                    token = scanner.getToken()
-                    if (name(token.symbol) == "semi") {
-                        token = scanner.getToken()
-                    }
-                    return true
-                }
-            }
-        }
-        return false
-    }
-    private fun Console(): Boolean {
-        token = scanner.getToken()
-        if (Bitwise()) {
-            if (name(token.symbol) == "semi") {
-                token = scanner.getToken()
-            }
-            return true
         }
         return false
     }
