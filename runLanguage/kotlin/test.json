@@ -1,0 +1,102 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [0, 0],
+          [1, 2],
+          [3, 2],
+          [4, 4],
+          [5, 6],
+          [7, 8],
+          [9, 9]
+        ]
+      },
+      "properties": {
+        "name": "Mariborski tek"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0, 0]
+      },
+      "properties": {
+        "name": "start",
+        "marker-color": "#00FF00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [9, 9]
+      },
+      "properties": {
+        "name": "end",
+        "marker-color": "#FFFF00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [4, 4],
+            [4, 6],
+            [5, 6],
+            [5, 4],
+            [4, 4]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "time",
+        "fill": "#40E0D0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [1, 2],
+            [3, 2],
+            [3, 4],
+            [1, 4],
+            [1, 2]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "food",
+        "fill": "#FFC0CB"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [5, 6],
+            [7, 6],
+            [7, 8],
+            [5, 8],
+            [5, 6]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "water",
+        "fill": "#0000FF"
+      }
+    }
+  ]
+}
