@@ -383,26 +383,119 @@ class Parser(private val scanner: Scanner) {
     private fun Program(): Boolean {
         if(name(token.symbol) == "run") {
             token = scanner.getToken()
-            return Statements()
-            //return Run()
+            return Run()
         }
         return false
     }
 
-    private fun Statements(): Boolean {
-        while (true) {
-            if(name(token.symbol) == "variable") {
-                if (!Assign()) {
-                    return false
+//    private fun Statements(): Boolean {
+//        while (true) {
+//            if(name(token.symbol) == "variable") {
+//                if (!Assign()) {
+//                    return false
+//                }
+//            }
+//            else {
+//                return true
+//            }
+//        }
+//    }
+
+    private fun Run(): Boolean {
+        if(name(token.symbol) == "string") {
+            token = scanner.getToken()
+            if(name(token.symbol) == "lcurly") {
+                token = scanner.getToken()
+                if(name(token.symbol) == "path") {
+                    token = scanner.getToken()
+                    if(Path()) {
+
+                    }
                 }
             }
-            else {
-                return true
-            }
         }
+        return false
     }
 
+    private fun Path() : Boolean {
+        if(name(token.symbol) == "lcurly") {
+            token = scanner.getToken()
+            if (Points()) {
+                if(name(token.symbol) == "start") {
+                    token = scanner.getToken()
+                    if (Start()) {
+                        if(name(token.symbol) == "end") {
+                            token = scanner.getToken()
+                            if (End()) {
 
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun Start(): Boolean {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            if(Point()) {
+                if(name(token.symbol) == "rcurly") {
+                    token = scanner.getToken()
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun End(): Boolean {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            if(Point()) {
+                if(name(token.symbol) == "rcurly") {
+                    token = scanner.getToken()
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun Points(): Boolean {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            if(Point()) {
+                if(name(token.symbol) == "comma") {
+                    token = scanner.getToken()
+                    return Points()
+                }
+                if(name(token.symbol) == "lcurly") {
+                    token = scanner.getToken()
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun Point(): Boolean {
+        if(name(token.symbol) == "int") {
+            token = scanner.getToken()
+            if(name(token.symbol) == "comma") {
+                token = scanner.getToken()
+                if(name(token.symbol) == "int") {
+                    token = scanner.getToken()
+                    if(name(token.symbol) == "rparen") {
+                        token = scanner.getToken()
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
 
     private fun Assign(): Boolean {
         token = scanner.getToken()
