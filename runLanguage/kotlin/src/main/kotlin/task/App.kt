@@ -388,6 +388,7 @@ class Parser(private val scanner: Scanner) {
         return false
     }
 
+
 //    private fun Statements(): Boolean {
 //        while (true) {
 //            if(name(token.symbol) == "variable") {
