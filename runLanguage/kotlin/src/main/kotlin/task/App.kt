@@ -29,6 +29,7 @@ const val CIRC_SYMBOL = 22
 const val BOX_SYMBOL = 23
 const val BWAND_SYMBOL = 24
 const val BWOR_SYMBOL = 25
+const val DECIMAL_SYMBOL = 26
 
 const val ERROR_STATE = 0
 const val EOF_SYMBOL = -1
@@ -48,7 +49,7 @@ object ForForeachFFFAutomaton: DFA {
     override val states = (1 .. 100).toSet()
     override val alphabet = 0 .. 255
     override val startState = 1
-    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54, 55, 56)
+    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54, 55, 56, 58)
 
     private val numberOfStates = states.max() + 1 // plus the ERROR_STATE
     private val numberOfCodes = alphabet.max() + 1 // plus the EOF
@@ -247,6 +248,10 @@ object ForForeachFFFAutomaton: DFA {
         setTransition(1, '&', 55)
         setTransition(1, '|', 56)
 
+        setTransition(2, '.', 57)
+        setTransition(57, '0'..'9', 58)
+        setTransition(58, '0'..'9', 58)
+
 
         setSymbol(2, INT_SYMBOL)
         setSymbol(5, STRING_SYBOL)
@@ -275,6 +280,7 @@ object ForForeachFFFAutomaton: DFA {
         setSymbol(54, BOX_SYMBOL)
         setSymbol(55, BWAND_SYMBOL)
         setSymbol(56, BWOR_SYMBOL)
+        setSymbol(58, DECIMAL_SYMBOL)
 
     }
 }
@@ -355,6 +361,7 @@ fun name(symbol: Int) =
         BOX_SYMBOL -> "box"
         BWAND_SYMBOL -> "bwand"
         BWOR_SYMBOL -> "bwor"
+        DECIMAL_SYMBOL -> "decimal"
 
         else -> throw Error("Invalid symbol")
     }
@@ -374,7 +381,12 @@ class Parser(private val scanner: Scanner) {
         return Program() && token.symbol == EOF_SYMBOL
     }
     private fun Program(): Boolean {
-        return Statements()
+        if(name(token.symbol) == "run") {
+            token = scanner.getToken()
+            return Statements()
+            //return Run()
+        }
+        return false
     }
 
     private fun Statements(): Boolean {
@@ -389,6 +401,8 @@ class Parser(private val scanner: Scanner) {
             }
         }
     }
+
+
 
     private fun Assign(): Boolean {
         token = scanner.getToken()
