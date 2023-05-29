@@ -514,19 +514,13 @@ class Parser(private val scanner: Scanner) {
     private fun Point(): Boolean {
         if(name(token.symbol) == "lparen") {
             token = scanner.getToken()
-            when (name(token.symbol)) {
-                "int", "decimal" -> {
+            if (Additive()) {
+                if(name(token.symbol) == "comma") {
                     token = scanner.getToken()
-                    if(name(token.symbol) == "comma") {
-                        token = scanner.getToken()
-                        when (name(token.symbol)) {
-                            "int", "decimal" -> {
-                                token = scanner.getToken()
-                                if(name(token.symbol) == "rparen") {
-                                    token = scanner.getToken()
-                                    return true
-                                }
-                            }
+                    if (Additive()) {
+                        if(name(token.symbol) == "rparen") {
+                            token = scanner.getToken()
+                            return true
                         }
                     }
                 }
@@ -593,7 +587,7 @@ class Parser(private val scanner: Scanner) {
     }
     private fun Primary(): Boolean {
         when (name(token.symbol)) {
-            "int", "hex", "variable" -> {
+            "int", "hex", "variable", "decimal" -> {
                 token = scanner.getToken()
                 return true
             }

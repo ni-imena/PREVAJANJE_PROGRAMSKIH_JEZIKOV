@@ -1,4 +1,4 @@
-run "tek Portoroz" {
+run "Mariborski tek" {
     path {
       (0,0),
       (1,2),
