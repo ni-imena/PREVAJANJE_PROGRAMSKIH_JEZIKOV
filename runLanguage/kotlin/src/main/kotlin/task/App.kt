@@ -1,5 +1,6 @@
 package task
 
+import com.google.errorprone.annotations.Var
 import java.io.File
 import java.io.InputStream
 
@@ -618,7 +619,7 @@ class Parser(private val scanner: Scanner) {
 class Evaluator(private val scanner: Scanner) {
     var token: Token = scanner.getToken()
 
-    fun evaluate(): Int {
+    fun evaluate(): Double {
         val value = Expr()
         if (token.symbol == EOF_SYMBOL) {
             return value
@@ -626,33 +627,35 @@ class Evaluator(private val scanner: Scanner) {
             throw IllegalArgumentException("Invalid expression.")
         }
     }
-    private fun Expr(): Int {
+    private fun Expr(): Double {
         return Bitwise()
     }
-    private fun Bitwise(): Int {
+
+    private fun Bitwise(): Double {
         val value = Additive()
         return Bitwise_(value)
     }
-    private fun Bitwise_(leftValue: Int): Int {
+    private fun Bitwise_(leftValue: Double): Double {
         when (name(token.symbol)) {
             "bwand" -> {
                 token = scanner.getToken()
-                val rightValue = Additive()
-                return Bitwise_(leftValue and rightValue)
+                val rightValue = Additive().toInt()
+                return Bitwise_((leftValue.toInt() and rightValue).toDouble())
             }
             "bwor" -> {
                 token = scanner.getToken()
-                val rightValue = Additive()
-                return Bitwise_(leftValue or rightValue)
+                val rightValue = Additive().toInt()
+                return Bitwise_((leftValue.toInt() or rightValue).toDouble())
             }
         }
         return leftValue
     }
-    private fun Additive(): Int {
+
+    private fun Additive(): Double {
         val value = Multiplicative()
         return Additive_(value)
     }
-    private fun Additive_(leftValue: Int): Int {
+    private fun Additive_(leftValue: Double): Double {
         when (name(token.symbol)) {
             "plus" -> {
                 token = scanner.getToken()
@@ -667,11 +670,11 @@ class Evaluator(private val scanner: Scanner) {
         }
         return leftValue
     }
-    private fun Multiplicative(): Int {
+    private fun Multiplicative(): Double {
         val value = Unary()
         return Multiplicative_(value)
     }
-    private fun Multiplicative_(leftValue: Int): Int {
+    private fun Multiplicative_(leftValue: Double): Double {
         when (name(token.symbol)) {
             "times" -> {
                 token = scanner.getToken()
@@ -686,36 +689,50 @@ class Evaluator(private val scanner: Scanner) {
         }
         return leftValue
     }
-    private fun Unary(): Int {
+    private fun Unary(): Double {
         when (name(token.symbol)) {
             "plus", "minus" -> {
+                val operator = name(token.symbol)
                 token = scanner.getToken()
                 val value = Primary()
-                return if (name(token.symbol) == "plus") value else -value
+                return if (operator == "minus") -value else value
             }
         }
         return Primary()
     }
-    private fun Primary(): Int {
+
+    private val variables: HashMap<String, Double> = HashMap()
+    private fun Variable(name: String): Double {
+        if (name(token.symbol) == "assign") {
+            token = scanner.getToken()
+            val value = Bitwise()
+            variables[name] = value
+            return Expr()
+        }
+        return variables[name]!!
+    }
+
+    private fun Primary(): Double {
         when (name(token.symbol)) {
             "int" -> {
-                val value = token.lexeme.toInt()
+                val value = token.lexeme.toDouble()
                 token = scanner.getToken()
                 return value
             }
-            "hex" -> {
-                val value = token.lexeme.substring(1).toInt(16)
+            "decimal" -> {
+                val value = token.lexeme.toDouble()
                 token = scanner.getToken()
                 return value
             }
             "variable" -> {
-                if (token.lexeme == "x") {
-                    token = scanner.getToken()
-                    return 1
-                }
-                else {
-                    token = scanner.getToken()
-                    return 3
+                val variableName = token.lexeme
+                token = scanner.getToken()
+
+                if (variables.containsKey(variableName)) {
+                    return Variable(variableName)
+                } else {
+                    variables[variableName] = 0.0
+                    return Variable(variableName)
                 }
             }
             "lparen" -> {
@@ -728,7 +745,7 @@ class Evaluator(private val scanner: Scanner) {
             }
             else -> throw IllegalArgumentException("Invalid expression.")
         }
-        return 0
+        return 0.0
     }
 }
 
