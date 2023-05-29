@@ -622,11 +622,11 @@ class Evaluator(private val scanner: Scanner) {
     fun evaluate(): String {
         val result = Program()
         return result.toString()
-//        if (token.symbol == EOF_SYMBOL) {
-//            return result.toString()
-//        } else {
-//            throw IllegalArgumentException("Invalid expression.")
-//        }
+        if (token.symbol == EOF_SYMBOL) {
+            return result.toString()
+        } else {
+            throw IllegalArgumentException("Invalid expression.")
+        }
     }
     private fun Program(): StringBuilder {
         val jsonStringBuilder = StringBuilder("""
@@ -658,20 +658,26 @@ class Evaluator(private val scanner: Scanner) {
     }
 
     private fun Run(jsonStringBuilder: StringBuilder) {
-        if (name(token.symbol) == "path") {
-            token = scanner.getToken()
-            Path(jsonStringBuilder)
-            token = scanner.getToken()
-            Start(jsonStringBuilder)
-            token = scanner.getToken()
-            End(jsonStringBuilder)
-//                            Stations(jsonStringBuilder)
-//                            return
-        }
-        else if (name(token.symbol) == "variable") {
-//            if (Primary()) {
-//                return Run(jsonStringBuilder)
-//            }
+        when (name(token.symbol)) {
+            "path" -> {
+                token = scanner.getToken()
+                Path(jsonStringBuilder)
+            }
+            "start" -> {
+                token = scanner.getToken()
+                Start(jsonStringBuilder)
+            }
+            "end" -> {
+                token = scanner.getToken()
+                End(jsonStringBuilder)
+            }
+            "variable" -> {
+                val value = Primary()
+                Run(jsonStringBuilder)
+            }
+            "time", "food", "water" -> {
+                Stations(jsonStringBuilder)
+            }
         }
         return
     }
@@ -703,11 +709,9 @@ class Evaluator(private val scanner: Scanner) {
                 "coordinates":
             """)
             Point(jsonStringBuilder)
-            if(name(token.symbol) == "rcurly") {
-                token = scanner.getToken()
-                jsonStringBuilder.append("}},")
-                return
-            }
+            token = scanner.getToken()
+            jsonStringBuilder.append("}},")
+            Run(jsonStringBuilder)
         }
     }
 
@@ -726,61 +730,100 @@ class Evaluator(private val scanner: Scanner) {
             "coordinates":
             """)
             Point(jsonStringBuilder)
-            if(name(token.symbol) == "rcurly") {
+            token = scanner.getToken()
+            jsonStringBuilder.append("}}")
+            Run(jsonStringBuilder)
+        }
+    }
+
+    private fun Stations(jsonStringBuilder: StringBuilder) {
+        if (name(token.symbol) == "rcurly") {
+            token = scanner.getToken()
+            return
+        }
+        when (name(token.symbol)) {
+            "time" -> {
                 token = scanner.getToken()
-                jsonStringBuilder.append("}}")
+                jsonStringBuilder.append("""
+                ,
+                {
+                  "type": "Feature",
+                  "properties": {
+                    "name": "time",
+                    "fill": "#98FB98"
+                """.trimIndent())
+                Station(jsonStringBuilder)
+            }
+            "food" -> {
+                token = scanner.getToken()
+                jsonStringBuilder.append("""
+                ,
+                {
+                  "type": "Feature",
+                  "properties": {
+                    "name": "food",
+                    "fill": "#FFC0CB"
+                """.trimIndent())
+                Station(jsonStringBuilder)
+            }
+            "water" -> {
+                token = scanner.getToken()
+                jsonStringBuilder.append("""
+                ,
+                {
+                  "type": "Feature",
+                  "properties": {
+                    "name": "water",
+                    "fill": "#0000FF"
+                """.trimIndent())
+                Station(jsonStringBuilder)
+            }
+        }
+        Run(jsonStringBuilder)
+    }
+
+    private fun Station(jsonStringBuilder: StringBuilder) {
+        token = scanner.getToken()
+        token = scanner.getToken()
+        jsonStringBuilder.append("""
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+        """.trimIndent())
+        Box(jsonStringBuilder)
+        token = scanner.getToken()
+        jsonStringBuilder.append("]]}}")
+        Stations(jsonStringBuilder)
+    }
+
+    private fun Box(jsonStringBuilder: StringBuilder) {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            token = scanner.getToken()
+            val x1 = Additive()
+            token = scanner.getToken()
+            val y1 = Additive()
+            token = scanner.getToken()
+            token = scanner.getToken()
+            token = scanner.getToken()
+            val x2 = Additive()
+            token = scanner.getToken()
+            val y2 = Additive()
+            jsonStringBuilder.append("""
+            [$x1, $y1],
+            [$x2, $y1],
+            [$x2, $y2],
+            [$x1, $y2],
+            [$x1, $y1]
+            """.trimIndent())
+            if(name(token.symbol) == "rparen") {
+                token = scanner.getToken()
                 return
             }
         }
     }
-//
-//    private fun Stations(): Boolean {
-//        if (name(token.symbol) == "rcurly") {
-//            token = scanner.getToken()
-//            return true
-//        }
-//        when (name(token.symbol)) {
-//            "time", "food", "water" -> {
-//                token = scanner.getToken()
-//                return Station()
-//            }
-//        }
-//        return false
-//    }
-//
-//    private fun Station() : Boolean {
-//        if(name(token.symbol) == "lcurly") {
-//            token = scanner.getToken()
-//            if (name(token.symbol) == "box") {
-//                token = scanner.getToken()
-//                if (Box()) {
-//                    if(name(token.symbol) == "rcurly") {
-//                        token = scanner.getToken()
-//                        return Stations()
-//                    }
-//                }
-//            }
-//        }
-//        return false
-//    }
-//
-//    private fun Box(): Boolean {
-//        if(name(token.symbol) == "lparen") {
-//            token = scanner.getToken()
-//            if(Point()) {
-//                if(name(token.symbol) == "comma") {
-//                    token = scanner.getToken()
-//                    if(Point()) {
-//                        if(name(token.symbol) == "rparen") {
-//                            token = scanner.getToken()
-//                            return true
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return false
-//    }
 
     private fun Points(jsonStringBuilder: StringBuilder) {
         Point(jsonStringBuilder)
@@ -882,14 +925,12 @@ class Evaluator(private val scanner: Scanner) {
     }
 
     private val variables: HashMap<String, Double> = HashMap()
-    private fun Variable(name: String): Double {
+    private fun Variable(name: String) {
         if (name(token.symbol) == "assign") {
             token = scanner.getToken()
             val value = Bitwise()
             variables[name] = value
-            //Run()
         }
-        return variables[name]!!
     }
 
     private fun Primary(): Double {
@@ -909,10 +950,10 @@ class Evaluator(private val scanner: Scanner) {
                 token = scanner.getToken()
 
                 if (variables.containsKey(variableName)) {
-                    return Variable(variableName)
+                    return variables[variableName]!!
                 } else {
                     variables[variableName] = 0.0
-                    return Variable(variableName)
+                    Variable(variableName)
                 }
             }
             "lparen" -> {
