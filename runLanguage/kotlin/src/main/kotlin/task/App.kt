@@ -619,16 +619,196 @@ class Parser(private val scanner: Scanner) {
 class Evaluator(private val scanner: Scanner) {
     var token: Token = scanner.getToken()
 
-    fun evaluate(): Double {
-        val value = Expr()
-        if (token.symbol == EOF_SYMBOL) {
-            return value
-        } else {
-            throw IllegalArgumentException("Invalid expression.")
+    fun evaluate(): String {
+        val result = Program()
+        return result.toString()
+//        if (token.symbol == EOF_SYMBOL) {
+//            return result.toString()
+//        } else {
+//            throw IllegalArgumentException("Invalid expression.")
+//        }
+    }
+    private fun Program(): StringBuilder {
+        val jsonStringBuilder = StringBuilder("""
+        {
+          "type": "FeatureCollection",
+          "features": [
+        """.trimIndent())
+        if(name(token.symbol) == "run") {
+            token = scanner.getToken()
+            if(name(token.symbol) == "string") {
+                token = scanner.getToken()
+                if(name(token.symbol) == "lcurly") {
+                    token = scanner.getToken()
+                    jsonStringBuilder.append("""
+                    {
+                      "type": "Feature",
+                      "properties": {
+                        "name": "path"
+                      },
+                      "geometry": {
+                        "type": "LineString",
+                    """)
+                    Run(jsonStringBuilder)
+                }
+            }
+        }
+        jsonStringBuilder.append("]}")
+        return jsonStringBuilder
+    }
+
+    private fun Run(jsonStringBuilder: StringBuilder) {
+        if (name(token.symbol) == "path") {
+            token = scanner.getToken()
+            Path(jsonStringBuilder)
+            token = scanner.getToken()
+            Start(jsonStringBuilder)
+            token = scanner.getToken()
+            End(jsonStringBuilder)
+//                            Stations(jsonStringBuilder)
+//                            return
+        }
+        else if (name(token.symbol) == "variable") {
+//            if (Primary()) {
+//                return Run(jsonStringBuilder)
+//            }
+        }
+        return
+    }
+
+    private fun Path(jsonStringBuilder: StringBuilder) {
+        if(name(token.symbol) == "lcurly") {
+            token = scanner.getToken()
+            jsonStringBuilder.append("""
+            "coordinates": [
+            """)
+            Points(jsonStringBuilder)
+            jsonStringBuilder.append("]}},")
+            Run(jsonStringBuilder)
         }
     }
-    private fun Expr(): Double {
-        return Bitwise()
+
+    private fun Start(jsonStringBuilder: StringBuilder) {
+        if(name(token.symbol) == "lcurly") {
+            token = scanner.getToken()
+            jsonStringBuilder.append("""
+            {
+              "type": "Feature",
+              "properties": {
+                "name": "start",
+                "marker-color": "#00FF00"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates":
+            """)
+            Point(jsonStringBuilder)
+            if(name(token.symbol) == "rcurly") {
+                token = scanner.getToken()
+                jsonStringBuilder.append("}},")
+                return
+            }
+        }
+    }
+
+    private fun End(jsonStringBuilder: StringBuilder) {
+        if(name(token.symbol) == "lcurly") {
+            token = scanner.getToken()
+            jsonStringBuilder.append("""
+           {
+          "type": "Feature",
+          "properties": {
+            "name": "end",
+            "marker-color": "#FFFF00"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates":
+            """)
+            Point(jsonStringBuilder)
+            if(name(token.symbol) == "rcurly") {
+                token = scanner.getToken()
+                jsonStringBuilder.append("}}")
+                return
+            }
+        }
+    }
+//
+//    private fun Stations(): Boolean {
+//        if (name(token.symbol) == "rcurly") {
+//            token = scanner.getToken()
+//            return true
+//        }
+//        when (name(token.symbol)) {
+//            "time", "food", "water" -> {
+//                token = scanner.getToken()
+//                return Station()
+//            }
+//        }
+//        return false
+//    }
+//
+//    private fun Station() : Boolean {
+//        if(name(token.symbol) == "lcurly") {
+//            token = scanner.getToken()
+//            if (name(token.symbol) == "box") {
+//                token = scanner.getToken()
+//                if (Box()) {
+//                    if(name(token.symbol) == "rcurly") {
+//                        token = scanner.getToken()
+//                        return Stations()
+//                    }
+//                }
+//            }
+//        }
+//        return false
+//    }
+//
+//    private fun Box(): Boolean {
+//        if(name(token.symbol) == "lparen") {
+//            token = scanner.getToken()
+//            if(Point()) {
+//                if(name(token.symbol) == "comma") {
+//                    token = scanner.getToken()
+//                    if(Point()) {
+//                        if(name(token.symbol) == "rparen") {
+//                            token = scanner.getToken()
+//                            return true
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return false
+//    }
+
+    private fun Points(jsonStringBuilder: StringBuilder) {
+        Point(jsonStringBuilder)
+        if(name(token.symbol) == "comma") {
+            token = scanner.getToken()
+            jsonStringBuilder.append(",")
+            return Points(jsonStringBuilder)
+        }
+        if(name(token.symbol) == "rcurly") {
+            token = scanner.getToken()
+            return
+        }
+    }
+
+    private fun Point(jsonStringBuilder: StringBuilder) {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            val x = Additive()
+            token = scanner.getToken()
+            val y = Additive()
+            jsonStringBuilder.append("""
+            [${x},${y}]
+            """)
+            if(name(token.symbol) == "rparen") {
+                token = scanner.getToken()
+                return
+            }
+        }
     }
 
     private fun Bitwise(): Double {
@@ -707,7 +887,7 @@ class Evaluator(private val scanner: Scanner) {
             token = scanner.getToken()
             val value = Bitwise()
             variables[name] = value
-            return Expr()
+            //Run()
         }
         return variables[name]!!
     }
