@@ -615,13 +615,131 @@ class Parser(private val scanner: Scanner) {
     }
 }
 
+class Evaluator(private val scanner: Scanner) {
+    var token: Token = scanner.getToken()
+
+    fun evaluate(): Int {
+        val value = Expr()
+        if (token.symbol == EOF_SYMBOL) {
+            return value
+        } else {
+            throw IllegalArgumentException("Invalid expression.")
+        }
+    }
+    private fun Expr(): Int {
+        return Bitwise()
+    }
+    private fun Bitwise(): Int {
+        val value = Additive()
+        return Bitwise_(value)
+    }
+    private fun Bitwise_(leftValue: Int): Int {
+        when (name(token.symbol)) {
+            "bwand" -> {
+                token = scanner.getToken()
+                val rightValue = Additive()
+                return Bitwise_(leftValue and rightValue)
+            }
+            "bwor" -> {
+                token = scanner.getToken()
+                val rightValue = Additive()
+                return Bitwise_(leftValue or rightValue)
+            }
+        }
+        return leftValue
+    }
+    private fun Additive(): Int {
+        val value = Multiplicative()
+        return Additive_(value)
+    }
+    private fun Additive_(leftValue: Int): Int {
+        when (name(token.symbol)) {
+            "plus" -> {
+                token = scanner.getToken()
+                val rightValue = Multiplicative()
+                return Additive_(leftValue + rightValue)
+            }
+            "minus" -> {
+                token = scanner.getToken()
+                val rightValue = Multiplicative()
+                return Additive_(leftValue - rightValue)
+            }
+        }
+        return leftValue
+    }
+    private fun Multiplicative(): Int {
+        val value = Unary()
+        return Multiplicative_(value)
+    }
+    private fun Multiplicative_(leftValue: Int): Int {
+        when (name(token.symbol)) {
+            "times" -> {
+                token = scanner.getToken()
+                val rightValue = Unary()
+                return Multiplicative_(leftValue * rightValue)
+            }
+            "divide" -> {
+                token = scanner.getToken()
+                val rightValue = Unary()
+                return Multiplicative_(leftValue / rightValue)
+            }
+        }
+        return leftValue
+    }
+    private fun Unary(): Int {
+        when (name(token.symbol)) {
+            "plus", "minus" -> {
+                token = scanner.getToken()
+                val value = Primary()
+                return if (name(token.symbol) == "plus") value else -value
+            }
+        }
+        return Primary()
+    }
+    private fun Primary(): Int {
+        when (name(token.symbol)) {
+            "int" -> {
+                val value = token.lexeme.toInt()
+                token = scanner.getToken()
+                return value
+            }
+            "hex" -> {
+                val value = token.lexeme.substring(1).toInt(16)
+                token = scanner.getToken()
+                return value
+            }
+            "variable" -> {
+                if (token.lexeme == "x") {
+                    token = scanner.getToken()
+                    return 1
+                }
+                else {
+                    token = scanner.getToken()
+                    return 3
+                }
+            }
+            "lparen" -> {
+                token = scanner.getToken()
+                val value = Bitwise()
+                if (name(token.symbol) == "rparen") {
+                    token = scanner.getToken()
+                    return value;
+                }
+            }
+            else -> throw IllegalArgumentException("Invalid expression.")
+        }
+        return 0
+    }
+}
+
 fun main(args: Array<String>) {
     val file = File(args[0]).readText(Charsets.UTF_8)
 //    printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
-    if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
-        println("accept")
-    }
-    else {
-        println("reject")
-    }
+//    if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
+//        println("accept")
+//    }
+//    else {
+//        println("reject")
+//    }
+    println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
 }
