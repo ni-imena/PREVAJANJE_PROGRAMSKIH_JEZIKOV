@@ -383,34 +383,40 @@ class Parser(private val scanner: Scanner) {
     private fun Program(): Boolean {
         if(name(token.symbol) == "run") {
             token = scanner.getToken()
-            return Run()
+            if(name(token.symbol) == "string") {
+                token = scanner.getToken()
+                if(name(token.symbol) == "lcurly") {
+                    token = scanner.getToken()
+                    return Run()
+                }
+            }
         }
         return false
     }
 
     private fun Run(): Boolean {
-        if(name(token.symbol) == "string") {
+        if (name(token.symbol) == "path") {
             token = scanner.getToken()
-            if(name(token.symbol) == "lcurly") {
-                token = scanner.getToken()
-                if(name(token.symbol) == "path") {
+            if (Path()) {
+                if (name(token.symbol) == "start") {
                     token = scanner.getToken()
-                    if(Path()) {
-                        if(name(token.symbol) == "start") {
+                    if (Start()) {
+                        if(name(token.symbol) == "end") {
                             token = scanner.getToken()
-                            if (Start()) {
-                                if(name(token.symbol) == "end") {
-                                    token = scanner.getToken()
-                                    if (End()) {
-                                        return Stations()
-                                    }
-                                }
+                            if (End()) {
+                                return Stations()
                             }
                         }
                     }
                 }
             }
         }
+        else if (name(token.symbol) == "variable") {
+            if (Primary()) {
+                return Run()
+            }
+        }
+
         return false
     }
 
@@ -529,15 +535,15 @@ class Parser(private val scanner: Scanner) {
         return false
     }
 
-    private fun Assign(): Boolean {
-        token = scanner.getToken()
+    private fun Variable(): Boolean {
         if (name(token.symbol) == "assign") {
             token = scanner.getToken()
             if (Bitwise()) {
                 return true
             }
+            return false
         }
-        return false
+        return true
     }
 
     private fun Bitwise(): Boolean {
@@ -587,9 +593,13 @@ class Parser(private val scanner: Scanner) {
     }
     private fun Primary(): Boolean {
         when (name(token.symbol)) {
-            "int", "hex", "variable", "decimal" -> {
+            "int", "decimal" -> {
                 token = scanner.getToken()
                 return true
+            }
+            "variable" -> {
+                token = scanner.getToken()
+                return Variable()
             }
             "lparen" -> {
                 token = scanner.getToken()
