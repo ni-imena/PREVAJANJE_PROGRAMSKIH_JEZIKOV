@@ -266,14 +266,8 @@ object ForForeachFFFAutomaton: DFA {
         setNegativeTransition(62, 'f', 14)
         setTransition(62, '0'..'9', 15)
 
-        setTransition(1, 'f', 64)
-        setTransition(64, 'o', 65)
-        setTransition(65, 'r', 66)
-
-        setNegativeTransition(64, 'o', 14)
-        setNegativeTransition(65, 'r', 14)
-        setTransition(64, '0'..'9', 15)
-        setTransition(65, '0'..'9', 15)
+        //for from food
+        setTransition(40, 'r', 66)
 
         setTransition(1, 'i', 67)
         setTransition(67, 'n', 68)
@@ -283,12 +277,11 @@ object ForForeachFFFAutomaton: DFA {
 
         setTransition(1, ':', 69)
 
-        setTransition(1, 'p', 70)
-        setTransition(70, 'r', 71)
+        //proc from path
+        setTransition(23, 'r', 71)
         setTransition(71, 'o', 72)
         setTransition(72, 'c', 73)
 
-        setNegativeTransition(70, 'r', 14)
         setNegativeTransition(71, 'o', 14)
         setNegativeTransition(72, 'c', 14)
         setTransition(70, '0'..'9', 15)
@@ -1037,11 +1030,11 @@ class Evaluator(private val scanner: Scanner) {
 fun main(args: Array<String>) {
     val file = File(args[0]).readText(Charsets.UTF_8)
     printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
-//    if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
-//        println("accept")
-//        println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
-//    }
-//    else {
-//        println("reject")
-//    }
+    if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
+        println("accept")
+        println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
+    }
+    else {
+        println("reject")
+    }
 }
