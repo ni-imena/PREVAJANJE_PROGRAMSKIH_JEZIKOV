@@ -1,6 +1,5 @@
 package task
 
-import com.google.errorprone.annotations.Var
 import java.io.File
 import java.io.InputStream
 
@@ -15,8 +14,8 @@ const val DIVIDE_SYMBOL = 7
 const val COMMA_SYMBOL = 8
 const val ASSIGN_SYMBOL = 9
 const val SEMI_SYMBOL = 10
-const val CURLY_OPEN_SYMBOL = 11
-const val CURLY_CLOSE_SYMBOL = 12
+const val LCURLY_SYMBOL = 11
+const val RCURLY_SYMBOL = 12
 const val LPAREN_SYMBOL = 13
 const val RPAREN_SYMBOL = 14
 const val RUN_SYMBOL = 15
@@ -31,6 +30,16 @@ const val BOX_SYMBOL = 23
 const val BWAND_SYMBOL = 24
 const val BWOR_SYMBOL = 25
 const val DECIMAL_SYMBOL = 26
+const val MORE_SYMBOL = 27
+const val LESS_SYMBOL = 28
+const val EQUALS_SYMBOL = 29
+const val IF_SYMBOL = 30
+const val FOR_SYMBOL = 31
+const val IN_SYMBOL = 32
+const val RANGE_SYMBOL = 33
+const val PROCEDURE_SYMBOL = 34
+const val LARRAY_SYMBOL = 35
+const val RARRAY_SYMBOL = 36
 
 const val ERROR_STATE = 0
 const val EOF_SYMBOL = -1
@@ -50,7 +59,7 @@ object ForForeachFFFAutomaton: DFA {
     override val states = (1 .. 100).toSet()
     override val alphabet = 0 .. 255
     override val startState = 1
-    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54, 55, 56, 58)
+    override val finalStates = setOf(2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 26, 31, 34, 38, 42, 47, 51, 54, 55, 56, 58, 59, 60, 61, 63, 66, 68, 69, 73, 74, 75)
 
     private val numberOfStates = states.max() + 1 // plus the ERROR_STATE
     private val numberOfCodes = alphabet.max() + 1 // plus the EOF
@@ -122,13 +131,7 @@ object ForForeachFFFAutomaton: DFA {
         setTransition(1, '=', 12)
         setTransition(1, ',', 13)
 
-        setTransition(1, 'a', 14)
-        setTransition(1, 'a'..'b', 14)
-        setTransition(1, 'd'..'e', 14)
-        setTransition(1, 'g'..'o', 14)
-        setTransition(1, 'q', 14)
-        setTransition(1, 't'..'v', 14)
-        setTransition(1, 'x'..'z', 14)
+        setTransition(1, 'a'..'z', 14)
         setTransition(1, 'A'..'Z', 14)
         setTransition(14, 'a'..'z', 14)
         setTransition(14, 'A'..'Z', 14)
@@ -253,6 +256,48 @@ object ForForeachFFFAutomaton: DFA {
         setTransition(57, '0'..'9', 58)
         setTransition(58, '0'..'9', 58)
 
+        setTransition(1, '>', 59)
+        setTransition(1, '<', 60)
+        setTransition(12, '=', 61)
+
+        setTransition(1, 'i', 62)
+        setTransition(62, 'f', 63)
+
+        setNegativeTransition(62, 'f', 14)
+        setTransition(62, '0'..'9', 15)
+
+        setTransition(1, 'f', 64)
+        setTransition(64, 'o', 65)
+        setTransition(65, 'r', 66)
+
+        setNegativeTransition(64, 'o', 14)
+        setNegativeTransition(65, 'r', 14)
+        setTransition(64, '0'..'9', 15)
+        setTransition(65, '0'..'9', 15)
+
+        setTransition(1, 'i', 67)
+        setTransition(67, 'n', 68)
+
+        setNegativeTransition(67, 'n', 14)
+        setTransition(67, '0'..'9', 15)
+
+        setTransition(1, ':', 69)
+
+        setTransition(1, 'p', 70)
+        setTransition(70, 'r', 71)
+        setTransition(71, 'o', 72)
+        setTransition(72, 'c', 73)
+
+        setNegativeTransition(70, 'r', 14)
+        setNegativeTransition(71, 'o', 14)
+        setNegativeTransition(72, 'c', 14)
+        setTransition(70, '0'..'9', 15)
+        setTransition(71, '0'..'9', 15)
+        setTransition(72, '0'..'9', 15)
+
+        setTransition(1, '[', 74)
+        setTransition(1, ']', 75)
+
 
         setSymbol(2, INT_SYMBOL)
         setSymbol(5, STRING_SYBOL)
@@ -268,8 +313,8 @@ object ForForeachFFFAutomaton: DFA {
         setSymbol(15, VAR_SYMBOL)
         setSymbol(16, LPAREN_SYMBOL)
         setSymbol(17, RPAREN_SYMBOL)
-        setSymbol(18, CURLY_OPEN_SYMBOL)
-        setSymbol(19, CURLY_CLOSE_SYMBOL)
+        setSymbol(18, LCURLY_SYMBOL)
+        setSymbol(19, RCURLY_SYMBOL)
         setSymbol(22, RUN_SYMBOL)
         setSymbol(26, PATH_SYMBOL)
         setSymbol(31, START_SYMBOL)
@@ -282,7 +327,16 @@ object ForForeachFFFAutomaton: DFA {
         setSymbol(55, BWAND_SYMBOL)
         setSymbol(56, BWOR_SYMBOL)
         setSymbol(58, DECIMAL_SYMBOL)
-
+        setSymbol(59, MORE_SYMBOL)
+        setSymbol(60, LESS_SYMBOL)
+        setSymbol(61, EQUALS_SYMBOL)
+        setSymbol(63, IF_SYMBOL)
+        setSymbol(66, FOR_SYMBOL)
+        setSymbol(68, IN_SYMBOL)
+        setSymbol(69, RANGE_SYMBOL)
+        setSymbol(73, PROCEDURE_SYMBOL)
+        setSymbol(74, LARRAY_SYMBOL)
+        setSymbol(75, RARRAY_SYMBOL)
     }
 }
 
@@ -347,8 +401,8 @@ fun name(symbol: Int) =
         EOF_SYMBOL -> "eof"
         ASSIGN_SYMBOL -> "assign"
         SEMI_SYMBOL -> "semi"
-        CURLY_OPEN_SYMBOL -> "lcurly"
-        CURLY_CLOSE_SYMBOL -> "rcurly"
+        LCURLY_SYMBOL -> "lcurly"
+        RCURLY_SYMBOL -> "rcurly"
         LPAREN_SYMBOL -> "lparen"
         RPAREN_SYMBOL -> "rparen"
         RUN_SYMBOL -> "run"
@@ -363,6 +417,16 @@ fun name(symbol: Int) =
         BWAND_SYMBOL -> "bwand"
         BWOR_SYMBOL -> "bwor"
         DECIMAL_SYMBOL -> "decimal"
+        MORE_SYMBOL -> "more"
+        LESS_SYMBOL -> "less"
+        EQUALS_SYMBOL -> "equals"
+        IF_SYMBOL -> "if"
+        FOR_SYMBOL -> "for"
+        IN_SYMBOL -> "in"
+        RANGE_SYMBOL -> "range"
+        PROCEDURE_SYMBOL -> "proc"
+        LARRAY_SYMBOL -> "larray"
+        RARRAY_SYMBOL -> "rarray"
 
         else -> throw Error("Invalid symbol")
     }
@@ -621,7 +685,6 @@ class Evaluator(private val scanner: Scanner) {
 
     fun evaluate(): String {
         val result = Program()
-        return result.toString()
         if (token.symbol == EOF_SYMBOL) {
             return result.toString()
         } else {
@@ -653,6 +716,7 @@ class Evaluator(private val scanner: Scanner) {
                 }
             }
         }
+        token = scanner.getToken()
         jsonStringBuilder.append("]}")
         return jsonStringBuilder
     }
@@ -972,12 +1036,12 @@ class Evaluator(private val scanner: Scanner) {
 
 fun main(args: Array<String>) {
     val file = File(args[0]).readText(Charsets.UTF_8)
-//    printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
+    printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
 //    if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
 //        println("accept")
+//        println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
 //    }
 //    else {
 //        println("reject")
 //    }
-    println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
 }
