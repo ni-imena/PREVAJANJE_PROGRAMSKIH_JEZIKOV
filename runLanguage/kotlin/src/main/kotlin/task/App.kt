@@ -1,7 +1,9 @@
 package task
 
+import com.google.errorprone.annotations.Var
 import java.io.File
 import java.io.InputStream
+import javax.swing.plaf.nimbus.State
 
 const val SKIP_SYMBOL = 0
 const val INT_SYMBOL = 1
@@ -269,11 +271,8 @@ object ForForeachFFFAutomaton: DFA {
         //for from food
         setTransition(40, 'r', 66)
 
-        setTransition(1, 'i', 67)
-        setTransition(67, 'n', 68)
-
-        setNegativeTransition(67, 'n', 14)
-        setTransition(67, '0'..'9', 15)
+        //in from if
+        setTransition(62, 'n', 68)
 
         setTransition(1, ':', 69)
 
@@ -439,6 +438,12 @@ class Parser(private val scanner: Scanner) {
         return Program() && token.symbol == EOF_SYMBOL
     }
     private fun Program(): Boolean {
+        if(name(token.symbol) == "proc") {
+            token = scanner.getToken()
+            if (!Proc()) {
+                return false
+            }
+        }
         if(name(token.symbol) == "run") {
             token = scanner.getToken()
             if(name(token.symbol) == "string") {
@@ -452,29 +457,173 @@ class Parser(private val scanner: Scanner) {
         return false
     }
 
-    private fun Run(): Boolean {
-        if (name(token.symbol) == "path") {
+    private fun Proc(): Boolean {
+        if(name(token.symbol) == "variable") {
             token = scanner.getToken()
-            if (Path()) {
-                if (name(token.symbol) == "start") {
-                    token = scanner.getToken()
-                    if (Start()) {
-                        if(name(token.symbol) == "end") {
-                            token = scanner.getToken()
-                            if (End()) {
-                                return Stations()
+            if(name(token.symbol) == "lparen") {
+                token = scanner.getToken()
+                if (Parameters()) {
+                    if(name(token.symbol) == "lcurly") {
+                        token = scanner.getToken()
+                        if (Statement()) {
+                            if (name(token.symbol) == "rcurly") {
+                                token = scanner.getToken()
+                                return true
                             }
                         }
                     }
                 }
             }
         }
-        else if (name(token.symbol) == "variable") {
-            if (Primary()) {
-                return Run()
+        return false
+    }
+
+    private fun Parameters(): Boolean {
+        if (Primary()) {
+            if (name(token.symbol) == "comma") {
+                token = scanner.getToken()
+                return Parameters()
+            }
+            if (name(token.symbol) == "rparen") {
+                token = scanner.getToken()
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun Run(): Boolean {
+
+        if (name(token.symbol) == "path") {
+            token = scanner.getToken()
+            if (!Path()) {
+                return false
+            }
+        }
+        if (name(token.symbol) == "start") {
+            token = scanner.getToken()
+            if (!Start()) {
+                return false
+            }
+        }
+        if (name(token.symbol) == "end") {
+            token = scanner.getToken()
+            if (!End()) {
+                return false
             }
         }
 
+        when (name(token.symbol)) {
+            "time", "food", "water" -> {
+                token = scanner.getToken()
+                if (Station()) {
+                    return Run()
+                }
+            }
+            "if", "for" -> {
+                if (Statement()) {
+                    return Run()
+                }
+            }
+            "variable" -> {
+                if (Primary()) {
+                    return Run()
+                }
+            }
+        }
+        if (name(token.symbol) == "rcurly") {
+            token = scanner.getToken()
+            return true
+        }
+        return false
+    }
+
+    private fun Statement(): Boolean {
+        when (name(token.symbol)) {
+            "rcurly" -> {
+                return true
+            }
+            "if" -> {
+                token = scanner.getToken()
+                return If()
+            }
+            "for" -> {
+                token = scanner.getToken()
+                return For()
+            }
+            "variable" -> {
+                if (Primary()) {
+                    return Statement()
+                }
+            }
+            "lparen" -> {
+                if(Points()) {
+                    return Statement()
+                }
+            }
+            "time", "food", "water" -> {
+                token = scanner.getToken()
+                return Station()
+            }
+        }
+        return false
+    }
+
+    private fun If(): Boolean {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            if(Additive()) {
+                when (name(token.symbol)) {
+                    "more", "less", "equals" -> {
+                        token = scanner.getToken()
+                        if (Additive()) {
+                            if (name(token.symbol) == "rparen") {
+                                token = scanner.getToken()
+                                if (name(token.symbol) == "lcurly") {
+                                    token = scanner.getToken()
+                                    if (Statement()) {
+                                        if (name(token.symbol) == "rcurly") {
+                                            return Run()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun For(): Boolean {
+        if(name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            if (name(token.symbol) == "variable") {
+                token = scanner.getToken()
+                if (name(token.symbol) == "in") {
+                    token = scanner.getToken()
+                    if (Primary())  {
+                        if (name(token.symbol) == "range") {
+                            token = scanner.getToken()
+                            if (Primary()) {
+                                if(name(token.symbol) == "rparen") {
+                                    token = scanner.getToken()
+                                    if (name(token.symbol) == "lcurly") {
+                                        token = scanner.getToken()
+                                        if (Statement()) {
+                                            if (name(token.symbol) == "rcurly") {
+                                                return Run()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return false
     }
 
@@ -513,20 +662,6 @@ class Parser(private val scanner: Scanner) {
         return false
     }
 
-    private fun Stations(): Boolean {
-        if (name(token.symbol) == "rcurly") {
-            token = scanner.getToken()
-            return true
-        }
-        when (name(token.symbol)) {
-            "time", "food", "water" -> {
-                token = scanner.getToken()
-                return Station()
-            }
-        }
-        return false
-    }
-
     private fun Station() : Boolean {
         if(name(token.symbol) == "lcurly") {
             token = scanner.getToken()
@@ -535,7 +670,7 @@ class Parser(private val scanner: Scanner) {
                 if (Box()) {
                     if(name(token.symbol) == "rcurly") {
                         token = scanner.getToken()
-                        return Stations()
+                        return Statement()
                     }
                 }
             }
@@ -562,7 +697,12 @@ class Parser(private val scanner: Scanner) {
     }
 
     private fun Points(): Boolean {
-        if(Point()) {
+        when (name(token.symbol)) {
+            "if", "for", "variable" -> {
+                return Statement()
+            }
+        }
+        if (Point()) {
             if(name(token.symbol) == "comma") {
                 token = scanner.getToken()
                 return Points()
@@ -596,12 +736,38 @@ class Parser(private val scanner: Scanner) {
     private fun Variable(): Boolean {
         if (name(token.symbol) == "assign") {
             token = scanner.getToken()
-            if (Bitwise()) {
+            if (name(token.symbol) == "larray") {
+                token = scanner.getToken()
+                return Array()
+            }
+            else if (Bitwise()) {
                 return true
             }
             return false
         }
+        else if (name(token.symbol) == "larray") {
+            token = scanner.getToken()
+            return Array()
+        }
+        else if (name(token.symbol) == "lparen") {
+            token = scanner.getToken()
+            return Parameters()
+        }
         return true
+    }
+
+    private fun Array(): Boolean {
+        if (name(token.symbol) == "rarray") {
+            token = scanner.getToken()
+            return true
+        }
+        else if (Primary()) {
+            if (name(token.symbol) == "comma") {
+                token = scanner.getToken()
+            }
+            return Array()
+        }
+        return false
     }
 
     private fun Bitwise(): Boolean {
@@ -1029,10 +1195,10 @@ class Evaluator(private val scanner: Scanner) {
 
 fun main(args: Array<String>) {
     val file = File(args[0]).readText(Charsets.UTF_8)
-    printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
+    //printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
     if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
         println("accept")
-        println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
+        //println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
     }
     else {
         println("reject")
