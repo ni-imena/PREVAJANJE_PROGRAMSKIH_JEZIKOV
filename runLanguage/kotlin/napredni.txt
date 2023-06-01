@@ -1,0 +1,21 @@
+proc drawWater(x,y) {
+  water { box((x - 0.5, y - 0.5), (x + 0.5, y + 0.5)) }
+}
+
+run "Mariborski tek" {
+    list = [0, 1, 2, 3, 4, 5, 6, 7]
+    path {
+      for (a in 0:7) {
+        (list[a], list[a])
+      }
+    }
+      x = 0
+      start { (x,x) }
+      end { (7,7) }
+      time { box((3.5, 3.5),(4.5, 4.5)) }
+      if (x < 2) {
+        food { box((2.5, 2.5), (3.5, 3.5)) }
+      }
+      drawWater(5, 5)
+}
+

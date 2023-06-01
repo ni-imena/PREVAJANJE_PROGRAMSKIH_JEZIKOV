@@ -1198,7 +1198,7 @@ fun main(args: Array<String>) {
     //printTokens(Scanner(ForForeachFFFAutomaton, file.byteInputStream()))
     if(Parser(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).parse()) {
         println("accept")
-        //println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
+        println(Evaluator(Scanner(ForForeachFFFAutomaton, file.byteInputStream())).evaluate())
     }
     else {
         println("reject")
